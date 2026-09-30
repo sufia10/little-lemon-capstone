@@ -1,98 +1,175 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from "react-native";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+export default function Onboarding() {
+  const router = useRouter();
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+
+  const isValid =
+    firstName.trim() !== "" && lastName.trim() !== "" && email.trim() !== "";
+
+  const handleNext = async () => {
+    if (!isValid) return;
+
+    await AsyncStorage.setItem(
+      "user",
+      JSON.stringify({
+        firstName,
+        lastName,
+        email,
+      }),
     );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+
+    router.replace("/home");
+  };
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.content}
+      >
+        <View style={styles.logoCircle}>
+          <Text style={styles.lemon}>🍋</Text>
+        </View>
 
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+        <Text style={styles.title}>Little Lemon</Text>
+        <Text style={styles.city}>CHICAGO</Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+        <Text style={styles.welcome}>Welcome!</Text>
+        <Text style={styles.subtitle}>Create your profile to get started</Text>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
+        <View style={styles.form}>
+          <Text style={styles.label}>First Name *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your first name"
+            value={firstName}
+            onChangeText={setFirstName}
           />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+          <Text style={styles.label}>Last Name *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your last name"
+            value={lastName}
+            onChangeText={setLastName}
+          />
+
+          <Text style={styles.label}>Email *</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your email address"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.button, !isValid && styles.disabledButton]}
+          disabled={!isValid}
+          onPress={handleNext}
+        >
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    backgroundColor: "#F7F7F2",
   },
-  safeArea: {
+  content: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    paddingHorizontal: 24,
+    justifyContent: "center",
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+  logoCircle: {
+    alignSelf: "center",
+    marginBottom: 5,
+  },
+  lemon: {
+    fontSize: 60,
   },
   title: {
-    textAlign: 'center',
+    textAlign: "center",
+    fontSize: 36,
+    fontWeight: "800",
+    color: "#174C43",
   },
-  code: {
-    textTransform: 'uppercase',
+  city: {
+    textAlign: "center",
+    fontSize: 14,
+    letterSpacing: 6,
+    color: "#174C43",
+    marginTop: 2,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  welcome: {
+    textAlign: "center",
+    fontSize: 30,
+    fontWeight: "700",
+    color: "#174C43",
+    marginTop: 35,
+  },
+  subtitle: {
+    textAlign: "center",
+    color: "#666",
+    fontSize: 16,
+    marginTop: 8,
+    marginBottom: 25,
+  },
+  form: {
+    width: "100%",
+  },
+  label: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#222",
+    marginBottom: 7,
+    marginTop: 12,
+  },
+  input: {
+    height: 52,
+    borderWidth: 1,
+    borderColor: "#D0D0D0",
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    backgroundColor: "#FFF",
+    fontSize: 16,
+  },
+  button: {
+    height: 54,
+    borderRadius: 10,
+    backgroundColor: "#174C43",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 30,
+  },
+  disabledButton: {
+    backgroundColor: "#A9BDB8",
+  },
+  buttonText: {
+    color: "#FFF",
+    fontSize: 17,
+    fontWeight: "700",
   },
 });
